@@ -53,7 +53,7 @@ async def run_script() -> None:
         bot = Bot(token=envs.bot_token, parse_mode=ParseMode.HTML)
         await bot.delete_webhook(drop_pending_updates=True)
         for notice in objects_to_show:
-            logging.info(f"to show:{notice.internal_id}")
+            logging.info(f"to show:{notice['internal_id']}")
             await bot.send_photo(
                 chat_id=envs.target_chat_id,
                 caption=get_caption(notice),
@@ -66,7 +66,7 @@ async def run_script() -> None:
 
 def get_notices_text() -> str:
 
-    r = requests.get('http://x.faktor24.com/get_xmls/59.xml')
+    r = requests.get('http://x.faktor24.com/objects_1.xml')
     data = r.content
     text = data.decode("utf-8")
 
