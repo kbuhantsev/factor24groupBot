@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "factor24groupbot"
+version = "0.1.0"
+description = ""
+authors = ["kbuhantsev <k.buhantsev@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+apscheduler = "^3.10.4"
+beautifulsoup4 = "^4.12.2"
+requests = "^2.31.0"
+lxml = "^4.9.3"
+pydantic-settings = "^2.1.0"
+aiogram = "^3.2.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
