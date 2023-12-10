@@ -67,21 +67,21 @@ async def send_over_bot(objects_to_show) -> bool:
     # bot = Bot(token=envs.bot_token, parse_mode=ParseMode.HTML)
     # await bot.delete_webhook(drop_pending_updates=True)
 
-    idx = 1
     for notice in objects_to_show:
-        idx += 1
 
         # 1 По категории: квартира, дом...
         topic_data = topics.get(notice["category"].lower(), None)
         if topic_data:
-            logging.info(f"отправка по категории {notice['category']} в топик {topic_data['topic']}")
+            pass
+            # logging.info(f"отправка по категории {notice['category']} в топик {topic_data['topic']}")
         else:
             logging.warning(f"по категории {notice['category']} не найдено в топиках")
 
         # 2  По коду расположения sub-locality-name
         topic_data = topics.get(notice["sub_locality_name"].lower(), None)
         if topic_data:
-            logging.info(f"отправка по расположению {notice['sub_locality_name']} в топик {topic_data['topic']}")
+            pass
+            # logging.info(f"отправка по расположению {notice['sub_locality_name']} в топик {topic_data['topic']}")
         else:
             logging.warning(f"по расположению {notice['sub_locality_name']} не найдено в топиках")
         # await bot.send_photo(
@@ -91,11 +91,6 @@ async def send_over_bot(objects_to_show) -> bool:
 
         # await asyncio.sleep(1.5)
         await asyncio.sleep(0.5)
-
-        if idx == 100:
-            break
-
-
 
     # await bot.session.close()
 
