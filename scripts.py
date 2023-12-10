@@ -2,7 +2,7 @@ import json
 from pprint import pprint
 
 
-def read_write_topicks():
+def read_write_topics():
     areas = {}
 
     with open("topics.csv", "r", encoding='utf-8') as fr:
@@ -29,4 +29,4 @@ def read_write_topicks():
 
 
 if __name__ == "__main__":
-    read_write_topicks()
+    read_write_topics()

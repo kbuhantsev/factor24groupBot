@@ -16,7 +16,6 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from factor24groupBot.settings import settings as envs
 
-
 current_path = Path.cwd()
 settings_path = Path(Path.joinpath(current_path, "settings.json"))
 
@@ -51,27 +50,64 @@ async def run_script() -> None:
     logging.info(f"Объекты отфильтрованы. К показу {len(objects_to_show)} объектов")
 
     if len(objects_to_show) > 0:
-        bot = Bot(token=envs.bot_token, parse_mode=ParseMode.HTML)
-        await bot.delete_webhook(drop_pending_updates=True)
-        for notice in objects_to_show:
-            logging.info(f"to show:{notice['internal_id']}")
-            await bot.send_photo(
-                chat_id=envs.target_chat_id,
-                caption=get_caption(notice),
-                photo=URLInputFile(notice['image']))
-            await asyncio.sleep(1.5)
-        await bot.session.close()
+        result = await send_over_bot(objects_to_show)
+        if result:
+            save_settings_to_file(settings, max_id)
 
-    save_settings_to_file(settings, max_id)
+
+async def send_over_bot(objects_to_show) -> bool:
+    file_path = Path(Path.joinpath(current_path, "topics.json"))
+    with open(file_path, "r", encoding="utf-8") as fr:
+        topics = json.load(fr)
+
+    if not topics:
+        logging.error("Не удалось прочитать файл topics.json !!!")
+        return False
+
+    # bot = Bot(token=envs.bot_token, parse_mode=ParseMode.HTML)
+    # await bot.delete_webhook(drop_pending_updates=True)
+
+    idx = 1
+    for notice in objects_to_show:
+        idx += 1
+
+        # 1 По категории: квартира, дом...
+        topic_data = topics.get(notice["category"].lower(), None)
+        if topic_data:
+            logging.info(f"отправка по категории {notice['category']} в топик {topic_data['topic']}")
+        else:
+            logging.warning(f"по категории {notice['category']} не найдено в топиках")
+
+        # 2  По коду расположения sub-locality-name
+        topic_data = topics.get(notice["sub_locality_name"].lower(), None)
+        if topic_data:
+            logging.info(f"отправка по расположению {notice['sub_locality_name']} в топик {topic_data['topic']}")
+        else:
+            logging.warning(f"по расположению {notice['sub_locality_name']} не найдено в топиках")
+        # await bot.send_photo(
+        #     chat_id=envs.target_chat_id,
+        #     caption=get_caption(notice),
+        #     photo=URLInputFile(notice['image']))
+
+        # await asyncio.sleep(1.5)
+        await asyncio.sleep(0.5)
+
+        if idx == 100:
+            break
+
+
+
+    # await bot.session.close()
+
+    return True
 
 
 def get_notices_text() -> str:
-
     r = requests.get('http://x.faktor24.com/objects_1.xml')
     data = r.content
     text = data.decode("utf-8")
 
-    data_file_path = Path(Path.joinpath(current_path,  "data.xml"))
+    data_file_path = Path(Path.joinpath(current_path, "data.xml"))
     with open(data_file_path, 'wb') as fh:
         fh.write(data)
 
@@ -95,7 +131,6 @@ def get_settings_from_file(max_id: int) -> dict:
 
 
 def save_settings_to_file(settings: dict, max_id: int) -> None:
-
     with open(settings_path, "w", encoding='utf-8') as fh:
         settings["LAST_ID"] = max_id
         fh.write(json.dumps(settings, indent=4))
@@ -136,8 +171,8 @@ def get_offers_list(offers: list) -> list:
     object_keys = ("internal_id", "url", "category", "type", "district", "address", "sub_locality_name",
                    "price", "image", "name", "phone", "area", "lot_area", "rooms")
 
-    translations = {"продажа":"Продаж", "аренда":"Оренда", "квартира":"Квартири",
-                    "дом":"Будинки", "коммерция":"Комерція", "участок":"Ділянки"}
+    translations = {"продажа": "Продаж", "аренда": "Оренда", "квартира": "Квартири",
+                    "дом": "Будинки", "коммерция": "Комерція", "участок": "Ділянки"}
 
     for offer in offers:
         try:
@@ -209,5 +244,3 @@ if __name__ == '__main__':
     # loop = asyncio.new_event_loop()
     # loop.create_task(main())
     # loop.run_forever()
-
-
