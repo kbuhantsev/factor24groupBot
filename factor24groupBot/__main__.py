@@ -18,6 +18,7 @@ from factor24groupBot.settings import settings as envs
 
 current_path = Path.cwd()
 settings_path = Path(Path.joinpath(current_path, "settings.json"))
+topics_path = Path(Path.joinpath(current_path, "topics.json"))
 
 
 async def main() -> None:
@@ -56,43 +57,53 @@ async def run_script() -> None:
 
 
 async def send_over_bot(objects_to_show) -> bool:
-    file_path = Path(Path.joinpath(current_path, "topics.json"))
-    with open(file_path, "r", encoding="utf-8") as fr:
+
+    with open(topics_path, "r", encoding="utf-8") as fr:
         topics = json.load(fr)
 
     if not topics:
         logging.error("Не удалось прочитать файл topics.json !!!")
         return False
 
-    # bot = Bot(token=envs.bot_token, parse_mode=ParseMode.HTML)
-    # await bot.delete_webhook(drop_pending_updates=True)
+    bot = Bot(token=envs.bot_token, parse_mode=ParseMode.HTML)
+    await bot.delete_webhook(drop_pending_updates=True)
 
     for notice in objects_to_show:
 
-        # 1 По категории: квартира, дом...
+        # 1  По коду расположения sub-locality-name
+        topic_data = topics.get(notice["sub_locality_name"].lower(), None)
+        if topic_data:
+            logging.info(f"отправка по расположению:{notice['sub_locality_name']} в топик:{topic_data['topic']}")
+            notice["sub_locality_name"] = topic_data["ukr_name"]
+            try:
+                await bot.send_photo(
+                    chat_id=envs.target_chat_id,
+                    message_thread_id=topic_data['topic'],
+                    caption=get_caption(notice),
+                    photo=URLInputFile(notice['image']))
+                await asyncio.sleep(2)
+            except Exception as error:
+                logging.error(error)
+        else:
+            logging.warning(f"по расположению {notice['sub_locality_name']} не найдено в топиках")
+
+        # 2 По категории: квартира, дом...
         topic_data = topics.get(notice["category"].lower(), None)
         if topic_data:
-            pass
-            # logging.info(f"отправка по категории {notice['category']} в топик {topic_data['topic']}")
+            logging.info(f"отправка по категории:{notice['category']} id объявления:{notice['internal_id']}")
+            try:
+                await bot.send_photo(
+                    chat_id=envs.target_chat_id,
+                    message_thread_id=topic_data['topic'],
+                    caption=get_caption(notice),
+                    photo=URLInputFile(notice['image']))
+                await asyncio.sleep(2)
+            except Exception as error:
+                logging.error(error)
         else:
             logging.warning(f"по категории {notice['category']} не найдено в топиках")
 
-        # 2  По коду расположения sub-locality-name
-        topic_data = topics.get(notice["sub_locality_name"].lower(), None)
-        if topic_data:
-            pass
-            # logging.info(f"отправка по расположению {notice['sub_locality_name']} в топик {topic_data['topic']}")
-        else:
-            logging.warning(f"по расположению {notice['sub_locality_name']} не найдено в топиках")
-        # await bot.send_photo(
-        #     chat_id=envs.target_chat_id,
-        #     caption=get_caption(notice),
-        #     photo=URLInputFile(notice['image']))
-
-        # await asyncio.sleep(1.5)
-        await asyncio.sleep(0.5)
-
-    # await bot.session.close()
+    await bot.session.close()
 
     return True
 
@@ -164,7 +175,7 @@ def get_offers_list(offers: list) -> list:
     objects_to_show = []
 
     object_keys = ("internal_id", "url", "category", "type", "district", "address", "sub_locality_name",
-                   "price", "image", "name", "phone", "area", "lot_area", "rooms")
+                   "price", "image", "area", "lot_area", "rooms")
 
     translations = {"продажа": "Продаж", "аренда": "Оренда", "квартира": "Квартири",
                     "дом": "Будинки", "коммерция": "Комерція", "участок": "Ділянки"}
@@ -177,6 +188,10 @@ def get_offers_list(offers: list) -> list:
 
             category = offer.find("category").text.lower()  # Продажа, Аренда
             notice["category"] = translations.get(category, category.capitalize())  # Квартира
+            notice["phone"] = "0733554310" if category == "продажа" else "0733556168"
+
+            name_array = offer.find("name").text.split(" ")  # <name>Юлия Александровна Курова</name>
+            notice["name"] = f"{name_array[0]} {name_array[2]}" if category == "продажа" else "Катерина Чернишенко"
 
             notice_type = offer.find("type").text.lower()  # Квартира, Дом, Коммерция...
             notice["type"] = translations.get(notice_type, notice_type.capitalize())
@@ -205,11 +220,6 @@ def get_offers_list(offers: list) -> list:
                 notice["lot_area"] = "0"
 
             notice["price"] = offer.find("value").text
-
-            name_array = offer.find("name").text.split(" ")  # <name>Юлия Александровна Курова</name>
-            notice["name"] = f"{name_array[0]} {name_array[2]}"
-
-            notice["phone"] = offer.find("phone").text
 
             image = offer.find("image")
             notice["image"] = image.text if image else None
