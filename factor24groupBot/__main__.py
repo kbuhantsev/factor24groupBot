@@ -70,6 +70,8 @@ async def send_over_bot(objects_to_show) -> bool:
 
     for notice in objects_to_show:
 
+        notice_id = notice["internal_id"]
+
         # 1  По коду расположения sub-locality-name
         topic_data = topics.get(notice["sub_locality_name"].lower(), None)
         if topic_data:
@@ -90,7 +92,7 @@ async def send_over_bot(objects_to_show) -> bool:
         # 2 По категории: квартира, дом...
         topic_data = topics.get(notice["category"].lower(), None)
         if topic_data:
-            logging.info(f"отправка по категории:{notice['category']} id объявления:{notice['internal_id']}")
+            logging.info(f"отправка по категории:{notice['category']} id объявления:{notice_id}")
             try:
                 await bot.send_photo(
                     chat_id=envs.target_chat_id,
@@ -102,6 +104,42 @@ async def send_over_bot(objects_to_show) -> bool:
                 logging.error(error)
         else:
             logging.warning(f"по категории {notice['category']} не найдено в топиках")
+
+        # 3 По типу: аренда
+        topic_data = topics.get(notice["type"].lower(), None)
+        if topic_data:
+            logging.info(f"отправка по типу:{notice['type']} id объявления:{notice_id}")
+            try:
+                await bot.send_photo(
+                    chat_id=envs.target_chat_id,
+                    message_thread_id=topic_data['topic'],
+                    caption=get_caption(notice),
+                    photo=URLInputFile(notice['image']))
+                await asyncio.sleep(2)
+            except Exception as error:
+                logging.error(error)
+        else:
+            logging.warning(f"по типу:{notice['type']} не найдено в топиках")
+
+        # 4 По цене
+        price = 0
+        try:
+            price = int(notice["price"])
+        except Exception as error:
+            logging.error(f"Не удалось преобразовать цену. ID объявления {str(notice_id)}")
+            logging.error(error)
+
+        if price > 0:
+            logging.info(f"отправка по цене:{str(price)} id объявления:{notice_id}")
+            try:
+                await bot.send_photo(
+                    chat_id=envs.target_chat_id,
+                    message_thread_id=1,
+                    caption=get_caption(notice),
+                    photo=URLInputFile(notice['image']))
+                await asyncio.sleep(2)
+            except Exception as error:
+                logging.error(error)
 
     await bot.session.close()
 
@@ -186,15 +224,15 @@ def get_offers_list(offers: list) -> list:
             notice["internal_id"] = int(offer.get("internal-id"))
             notice["url"] = offer.find("url").text
 
-            category = offer.find("category").text.lower()  # Продажа, Аренда
-            notice["category"] = translations.get(category, category.capitalize())  # Квартира
-            notice["phone"] = "0733554310" if category == "продажа" else "0733556168"
+            category = offer.find("category").text.lower()  # Квартира, Дом, Коммерция...
+            notice["category"] = translations.get(category, category.capitalize())
 
             name_array = offer.find("name").text.split(" ")  # <name>Юлия Александровна Курова</name>
             notice["name"] = f"{name_array[0]} {name_array[2]}" if category == "продажа" else "Катерина Чернишенко"
 
-            notice_type = offer.find("type").text.lower()  # Квартира, Дом, Коммерция...
+            notice_type = offer.find("type").text.lower()  # Продажа, Аренда
             notice["type"] = translations.get(notice_type, notice_type.capitalize())
+            notice["phone"] = "0733554310" if notice_type == "продажа" else "0733556168"
 
             notice["district"] = offer.find("district").text
             notice["sub_locality_name"] = offer.find("sub-locality-name").text.replace(" ", "_")
