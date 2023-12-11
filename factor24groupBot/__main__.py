@@ -280,6 +280,6 @@ if __name__ == '__main__':
     logging.info("Скрипт запущен")
     asyncio.run(run_script())
 
-    # loop = asyncio.new_event_loop()
-    # loop.create_task(main())
-    # loop.run_forever()
+    loop = asyncio.new_event_loop()
+    loop.create_task(main())
+    loop.run_forever()
