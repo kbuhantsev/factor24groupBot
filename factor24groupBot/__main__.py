@@ -118,8 +118,6 @@ async def send_over_bot(objects_to_show) -> bool:
                 await asyncio.sleep(2)
             except Exception as error:
                 logging.error(error)
-        else:
-            logging.warning(f"по типу:{notice['type']} не найдено в топиках")
 
         # 4 По цене
         price = 0
@@ -129,12 +127,12 @@ async def send_over_bot(objects_to_show) -> bool:
             logging.error(f"Не удалось преобразовать цену. ID объявления {str(notice_id)}")
             logging.error(error)
 
-        if price > 0:
+        if 3000 <= price <= 25000:
             logging.info(f"отправка по цене:{str(price)} id объявления:{notice_id}")
             try:
                 await bot.send_photo(
                     chat_id=envs.target_chat_id,
-                    message_thread_id=1,
+                    message_thread_id=354,
                     caption=get_caption(notice),
                     photo=URLInputFile(notice['image']))
                 await asyncio.sleep(2)
@@ -227,12 +225,12 @@ def get_offers_list(offers: list) -> list:
             category = offer.find("category").text.lower()  # Квартира, Дом, Коммерция...
             notice["category"] = translations.get(category, category.capitalize())
 
-            name_array = offer.find("name").text.split(" ")  # <name>Юлия Александровна Курова</name>
-            notice["name"] = f"{name_array[0]} {name_array[2]}" if category == "продажа" else "Катерина Чернишенко"
-
             notice_type = offer.find("type").text.lower()  # Продажа, Аренда
             notice["type"] = translations.get(notice_type, notice_type.capitalize())
             notice["phone"] = "0733554310" if notice_type == "продажа" else "0733556168"
+
+            name_array = offer.find("name").text.split(" ")  # <name>Юлия Александровна Курова</name>
+            notice["name"] = f"{name_array[0]} {name_array[2]}" if notice_type == "продажа" else "Катерина"
 
             notice["district"] = offer.find("district").text
             notice["sub_locality_name"] = offer.find("sub-locality-name").text.replace(" ", "_")
