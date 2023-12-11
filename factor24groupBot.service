@@ -1,0 +1,14 @@
+[Unit]
+Description=factor24 group bot
+After=multi-user.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/kotus/git_repos/factor24groupBot
+ExecStart=/home/kotus/git_repos/factor24groupBot/.venv/bin/python -m factor24groupBot
+KillMode=process
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
