@@ -2,8 +2,6 @@ import asyncio
 import json
 import logging
 import sys
-from pprint import pprint
-
 import requests
 import re
 from pathlib import Path
@@ -127,12 +125,12 @@ async def send_over_bot(objects_to_show) -> bool:
             logging.error(f"Не удалось преобразовать цену. ID объявления {str(notice_id)}")
             logging.error(error)
 
-        if 3000 <= price <= 25000:
+        if 3000 <= price <= 25000 and notice["type"] == "Продаж":
             logging.info(f"отправка по цене:{str(price)} id объявления:{notice_id}")
             try:
                 await bot.send_photo(
                     chat_id=envs.target_chat_id,
-                    message_thread_id=354,
+                    message_thread_id=75566,
                     caption=get_caption(notice),
                     photo=URLInputFile(notice['image']))
                 await asyncio.sleep(2)
