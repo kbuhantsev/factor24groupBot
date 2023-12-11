@@ -122,7 +122,7 @@ async def send_over_bot(objects_to_show) -> bool:
         try:
             price = int(notice["price"])
         except Exception as error:
-            logging.error(f"Не удалось преобразовать цену. ID объявления {str(notice_id)}")
+            logging.error(f"Не удалось преобразовать цену. ID объявления {notice_id}")
             logging.error(error)
 
         if 3000 <= price <= 25000 and notice["type"] == "Продаж":
