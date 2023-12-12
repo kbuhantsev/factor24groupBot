@@ -87,30 +87,30 @@ async def send_over_bot(objects_to_show) -> bool:
         else:
             logging.warning(f"по расположению {notice['sub_locality_name']} не найдено в топиках")
 
-        # 2 По категории: квартира, дом...
-        topic_data = topics.get(notice["category"].lower(), None)
-        if topic_data:
-            logging.info(f"отправка по категории:{notice['category']} id объявления:{notice_id}")
-            try:
-                await bot.send_photo(
-                    chat_id=envs.target_chat_id,
-                    message_thread_id=topic_data['topic'],
-                    caption=get_caption(notice),
-                    photo=URLInputFile(notice['image']))
-                await asyncio.sleep(2)
-            except Exception as error:
-                logging.error(error)
-        else:
-            logging.warning(f"по категории {notice['category']} не найдено в топиках")
+        # 2 По категории: квартири, будинки, ділянки, комерція ...
+        if notice["type"] == "Продаж":
+            topic_data = topics.get(notice["category"].lower(), None)
+            if topic_data:
+                logging.info(f"отправка по категории:{notice['category']} id объявления:{notice_id}")
+                try:
+                    await bot.send_photo(
+                        chat_id=envs.target_chat_id,
+                        message_thread_id=topic_data['topic'],
+                        caption=get_caption(notice),
+                        photo=URLInputFile(notice['image']))
+                    await asyncio.sleep(2)
+                except Exception as error:
+                    logging.error(error)
+            else:
+                logging.warning(f"по категории {notice['category']} не найдено в топиках")
 
-        # 3 По типу: аренда
-        topic_data = topics.get(notice["type"].lower(), None)
-        if topic_data:
+        # 3 По типу: оренда
+        if notice["type"] == "Оренда":
             logging.info(f"отправка по типу:{notice['type']} id объявления:{notice_id}")
             try:
                 await bot.send_photo(
                     chat_id=envs.target_chat_id,
-                    message_thread_id=topic_data['topic'],
+                    message_thread_id=75320,
                     caption=get_caption(notice),
                     photo=URLInputFile(notice['image']))
                 await asyncio.sleep(2)
