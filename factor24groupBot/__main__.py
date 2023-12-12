@@ -163,6 +163,9 @@ def get_settings_from_file(max_id: int) -> dict:
         settings = {
             "LAST_ID": max_id
         }
+        with open(settings_path, "w", encoding='utf-8') as fh:
+            fh.write(json.dumps(settings, indent=4))
+            logging.info(f"Файл настроек успешно инициализирован.")
     else:
         with open(settings_path, "r", encoding='utf-8') as fh:
             settings = json.loads(fh.read())
