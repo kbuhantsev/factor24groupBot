@@ -181,16 +181,16 @@ def save_settings_to_file(settings: dict, max_id: int) -> None:
 
 
 def get_caption(notice: dict) -> str:
-    commercial = ["дом", "участок", "коммерция"]
+    commercial = ["Будинки", "Ділянки", "Комерція"]
 
-    if notice['category'].lower() in commercial:
+    if notice['category'] in commercial:
         lot_area = "📏 <b>Площа ділянки:</b> " + notice['lot_area'] + "сот\n"
         rooms_count = ""
     else:
         lot_area = ""
         rooms_count = "🪟 #Кімнат_" + notice['rooms'] + "\n"
 
-    if notice['category'].lower() == "дом":
+    if notice['category'] == "Будинки":
         rooms_count = "🪟 #Кімнат_" + notice['rooms'] + "\n"
 
     caption = (f" #{notice['type']} #{notice['category']} ID{notice['internal_id']}\n"
