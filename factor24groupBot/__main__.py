@@ -13,6 +13,7 @@ from bs4 import BeautifulSoup
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from factor24groupBot.settings import settings as envs
+from logging.handlers import RotatingFileHandler
 
 current_path = Path.cwd()
 settings_path = Path(Path.joinpath(current_path, "settings.json"))
@@ -55,7 +56,6 @@ async def run_script() -> None:
 
 
 async def send_over_bot(objects_to_show) -> bool:
-
     with open(topics_path, "r", encoding="utf-8") as fr:
         topics = json.load(fr)
 
@@ -274,7 +274,12 @@ if __name__ == '__main__':
         level=logging.INFO,
         handlers=[
             logging.StreamHandler(stream=sys.stdout),
-            logging.FileHandler(filename="app.log", mode="a")
+            RotatingFileHandler(filename="app.log",
+                                mode='a',
+                                maxBytes=1000000,  # 1mb
+                                backupCount=5,
+                                encoding="utf-8",
+                                delay=False)
         ],
         encoding="utf-8"
     )
