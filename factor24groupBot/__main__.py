@@ -232,10 +232,10 @@ def get_offers_list(offers: list) -> list:
             name_array = offer.find("name").text.split(" ")  # <name>Юлия Александровна Курова</name>
             notice["name"] = f"{name_array[0]} {name_array[2]}" if notice_type == "продажа" else "Катерина"
 
-            notice["district"] = offer.find("district").text
-            notice["sub_locality_name"] = offer.find("sub-locality-name").text.replace(" ", "_")
+            notice["district"] = offer.find("district").text.replace("-", "_")
+            notice["sub_locality_name"] = offer.find("sub-locality-name").text.replace(" ", "_").replace("-", "_")
             address = offer.find("address").text  # <address>Болгарская, 37</address>
-            notice["address"] = address.split(", ")[0].replace(" ", "_")
+            notice["address"] = address.split(", ")[0].replace(" ", "_").replace("-", "_")
 
             rooms = offer.find("rooms")
             if rooms:
